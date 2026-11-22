@@ -57,4 +57,4 @@ Kunci kursi dan pembuatan booking berjalan dalam transaksi PostgreSQL dengan iso
 
 ## Status
 
-Antarmuka pencarian dan pemilihan kursi saat ini masih demonstrasi. Backend Prisma dan endpoint pencarian serta seat-lock telah ditambahkan, tetapi belum terhubung ke antarmuka. Belum ada seed jadwal operasional, checkout pembayaran, atau E-Ticket produksi. Jangan gunakan untuk menerima pembayaran atau pemesanan nyata sebelum konfigurasi dan pengujian di atas selesai.
+Antarmuka pencarian jadwal, pemilihan kursi, data pemesan, dan penguncian kursi 15 menit sudah dihubungkan ke endpoint backend. Pencarian membaca PostgreSQL, bukan data demonstrasi. Aplikasi belum dapat menampilkan jadwal sampai database diisi dengan data rute, kendaraan, template jadwal, trip, dan kursi. Belum ada integrasi pembayaran, callback pembayaran, autentikasi admin/dispatcher/sopir, maupun E-Ticket produksi. Pengujian build, migrasi, dan concurrency belum dijalankan. Jangan gunakan untuk menerima pembayaran atau pemesanan nyata sebelum konfigurasi dan pengujian tersebut selesai.
