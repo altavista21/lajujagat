@@ -11,7 +11,7 @@ export async function GET(
   const booking = await prisma.booking.findUnique({
     where: { bookingCode },
     select: {
-      bookingCode: true, customerName: true, customerPhone: true, status: true,
+      bookingCode: true, customerName: true, status: true,
       expiresAt: true, createdAt: true,
       trip: {
         select: {
