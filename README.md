@@ -51,14 +51,41 @@ Body JSON:
 
 Kunci kursi dan pembuatan booking berjalan dalam transaksi PostgreSQL dengan isolasi serializable. Kursi dikunci 15 menit. Konflik kursi mengembalikan HTTP 409 dan seluruh transaksi dibatalkan. Kursi lock yang kedaluwarsa dilepas saat permintaan lock berikutnya untuk trip tersebut.
 
-## Konfigurasi yang masih diperlukan
+## Xendit
 
-- PostgreSQL aktif dan `DATABASE_URL` yang benar.
-- Data master rute, armada, jadwal, trip, dan kursi. API pencarian hanya membaca data yang sudah dimasukkan.
-- Integrasi pembayaran dan callback terverifikasi sebelum booking dapat dinyatakan lunas.
-- Autentikasi dan otorisasi admin/dispatcher/sopir.
-- Pengujian build, migrasi, dan concurrency terhadap database staging sebelum produksi.
+Alur pembayaran menggunakan Xendit Invoice API (hosted checkout):
+
+1. Pelanggan mengunci kursi. Sistem membuat booking dengan batas waktu 15 menit.
+2. Tombol Bayar dengan Xendit membuat invoice berdasarkan tarif perjalanan dan jumlah penumpang.
+3. Pelanggan menyelesaikan pembayaran di halaman checkout Xendit.
+4. Endpoint POST /api/webhooks/xendit memverifikasi header x-callback-token, ID invoice, kode booking, dan jumlah pembayaran.
+5. Booking menjadi CONFIRMED dan kursi menjadi BOOKED setelah callback pembayaran terverifikasi. Halaman tiket tersedia di /tiket/[bookingCode].
+
+Atur environment berikut di Vercel:
+- XENDIT_SECRET_KEY: Secret API Key dari Test Mode saat pengembangan.
+- XENDIT_CALLBACK_TOKEN: Callback Verification Token untuk webhook Invoice.
+- NEXT_PUBLIC_APP_URL: URL publik aplikasi, tanpa trailing slash.
+- ADMIN_PASSWORD: password admin unik.
+- ADMIN_SESSION_SECRET: rahasia acak minimal 32 karakter.
+
+Di Xendit Dashboard, pilih Test Mode, aktifkan metode pembayaran yang ingin diuji, lalu atur webhook Invoice ke https://DOMAIN-ANDA/api/webhooks/xendit. Jangan gunakan API key Live sebelum pengujian selesai. Jangan pernah menaruh secret key atau callback token di variabel NEXT_PUBLIC_, source code, atau GitHub.
+
+## Dashboard admin
+
+Buka /admin. Login memakai ADMIN_PASSWORD. Sesi admin menggunakan cookie HttpOnly bertanda tangan dan kedaluwarsa setelah 8 jam.
+
+Dashboard menyediakan pembuatan rute, armada beserta kapasitas kursi, template jadwal, trip berdasarkan tanggal, serta ringkasan perjalanan, booking, dan pembayaran. Kursi trip dibuat otomatis dari kapasitas armada saat trip dibuat.
+
+## Konfigurasi dan pekerjaan sebelum produksi
+
+- Buat PostgreSQL aktif dan jalankan migrasi Prisma setelah schema diperbarui.
+- Masukkan data rute, armada, tarif, dan jadwal asli perusahaan melalui dashboard. Data operasional nyata belum disediakan dan tidak dibuat-buat.
+- Tambahkan rate limiting untuk login admin dan endpoint pembuatan invoice.
+- Tambahkan rekonsiliasi dan prosedur refund untuk pembayaran terlambat setelah booking kedaluwarsa.
+- Uji webhook Xendit Test Mode, invoice expired, callback duplikat, nominal tidak cocok, dan pembayaran bersamaan.
+- Lengkapi pengelolaan edit/nonaktif, role petugas, laporan, dan audit log.
+- Jalankan npm run build, migrasi, dan pengujian concurrency terhadap database staging sebelum produksi.
 
 ## Status
 
-Antarmuka pencarian jadwal, pemilihan kursi, data pemesan, dan penguncian kursi 15 menit sudah dihubungkan ke endpoint backend. Pencarian membaca PostgreSQL, bukan data demonstrasi. Aplikasi belum dapat menampilkan jadwal sampai database diisi dengan data rute, kendaraan, template jadwal, trip, dan kursi. Belum ada integrasi pembayaran, callback pembayaran, autentikasi admin/dispatcher/sopir, maupun E-Ticket produksi. Pengujian build, migrasi, dan concurrency belum dijalankan. Jangan gunakan untuk menerima pembayaran atau pemesanan nyata sebelum konfigurasi dan pengujian tersebut selesai.
+Pencarian jadwal, pemilihan kursi, penguncian kursi 15 menit, pembuatan invoice Xendit, callback terverifikasi, halaman E-Ticket, login admin, dan pembuatan data operasional dasar telah ditambahkan ke source code. Integrasi belum dapat dianggap siap transaksi sampai kredensial Xendit dan database dikonfigurasi, migrasi dijalankan, data operasional asli dimasukkan, serta build dan pengujian end-to-end dilakukan.
