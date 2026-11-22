@@ -33,6 +33,7 @@ export default function Home() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
+  const [passengerNames, setPassengerNames] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -76,7 +77,7 @@ export default function Home() {
         body: JSON.stringify({
           tripId: activeTrip.id, seatNos: selected,
           customerName, customerPhone, customerEmail: customerEmail || undefined,
-          passengers: selected.map((seatNo) => ({ seatNo, name: customerName }))
+          passengers: selected.map((seatNo) => ({ seatNo, name: (passengerNames[seatNo] || customerName).trim() }))
         })
       });
       const data = await response.json();
