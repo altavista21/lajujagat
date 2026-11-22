@@ -67,7 +67,7 @@ export default function AdminPage() {
     finally { setBusy(false); }
   }
 
-  if (!authenticated) return <main style={{ maxWidth: 420, margin: "12vh auto", padding: 24, fontFamily: "Arial,sans-serif", color: "#17211d" }}>
+  if (!authenticated) return <main className="admin-page admin-login" style={{ maxWidth: 420, margin: "12vh auto", padding: 24, fontFamily: "Arial,sans-serif", color: "#17211d" }}>
     <a href="/" style={{ color: "#176b4a" }}>← Travel Laju Jagat</a>
     <h1 style={{ marginTop: 28 }}>Admin Laju Jagat</h1>
     <p>Masuk untuk mengelola data operasional dan pemesanan.</p>
@@ -81,7 +81,7 @@ export default function AdminPage() {
 
   if (!data) return <main style={{ padding: 32 }}>Memuat dashboard...</main>;
 
-  return <main style={{ maxWidth: 1180, margin: "0 auto", padding: "24px 16px 60px", fontFamily: "Arial,sans-serif", color: "#17211d" }}>
+  return <main className="admin-page" style={{ maxWidth: 1180, margin: "0 auto", padding: "24px 16px 60px", fontFamily: "Arial,sans-serif", color: "#17211d" }}>
     <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
       <div><a href="/" style={{ color: "#176b4a" }}>Travel Laju Jagat</a><h1 style={{ margin: "10px 0 0" }}>Dashboard Admin</h1></div>
       <button onClick={logout} style={{ ...buttonStyle, background: "#eef3f0", color: "#176b4a" }}>Keluar</button>
