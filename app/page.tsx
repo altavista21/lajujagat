@@ -37,14 +37,14 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [booking, setBooking] = useState<BookingResult | null>(null);
+  const [booking, setBooking] = useState<BookingResult | null>(null);\n  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   const activeTrip = trips.find((trip) => trip.id === active) ?? null;
   const orderedSeats = useMemo(() => activeTrip?.seats ?? [], [activeTrip]);
 
   async function search(event?: FormEvent) {
     event?.preventDefault();
-    setLoading(true); setError(""); setNotice(""); setBooking(null);
+    setLoading(true); setError(""); setNotice(""); setBooking(null); setCheckoutUrl(null);
     setActive(null); setSelected([]);
     try {
       const params = new URLSearchParams({ origin, destination, date, passengers: count });
@@ -92,6 +92,20 @@ export default function Home() {
       setNotice(data.message || "Kursi berhasil dikunci.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Pemesanan gagal diproses.");
+    } finally { setLoading(false); }
+  }
+
+  async function startPayment() {
+    if (!booking) return;
+    setLoading(true); setError("");
+    try {
+      const response = await fetch(`/api/bookings/${encodeURIComponent(booking.bookingCode)}/payment`, { method: "POST" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Tagihan gagal dibuat.");
+      setCheckoutUrl(data.checkoutUrl);
+      window.location.assign(data.checkoutUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Tidak dapat memulai pembayaran.");
     } finally { setLoading(false); }
   }
 
@@ -143,7 +157,7 @@ export default function Home() {
           {selected.map((seatNo) => <div className="field" key={seatNo}><label htmlFor={`passenger-${seatNo}`}>Nama penumpang kursi {seatNo}</label><input id={`passenger-${seatNo}`} value={passengerNames[seatNo] ?? customerName} onChange={e=>setPassengerNames(current=>({...current,[seatNo]:e.target.value}))} minLength={2} required /></div>)}
           <button className="primary" disabled={loading || customerName.trim().length < 2 || !/^\\+?[0-9]{9,15}$/.test(customerPhone.trim()) || selected.some(seatNo=>(passengerNames[seatNo] ?? customerName).trim().length < 2)} onClick={lockSeats}>Kunci kursi 15 menit <span aria-hidden>→</span></button>
         </div>}
-        {booking && <div className="notice" role="status"><b>Kode booking: {booking.bookingCode}</b><p>Kursi ditahan sampai {new Date(booking.expiresAt).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}. Total: {money(booking.amount)}.</p><p>Pembayaran online belum diaktifkan. Simpan kode booking ini.</p></div>}
+        {booking && <div className="notice" role="status"><b>Kode booking: {booking.bookingCode}</b><p>Kursi ditahan sampai {new Date(booking.expiresAt).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}. Total: {money(booking.amount)}.</p><p>Lanjutkan pembayaran melalui halaman aman Xendit sebelum batas waktu berakhir.</p><button className="primary" disabled={loading} onClick={startPayment}>{loading ? "Menyiapkan pembayaran..." : "Bayar dengan Xendit →"}</button>{checkoutUrl && <p><a href={checkoutUrl}>Buka halaman pembayaran Xendit</a></p>}</div>}
         {notice && !booking && <p className="notice" role="status">{notice}</p>}
       </section>}
     </section>
