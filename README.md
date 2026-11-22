@@ -5,8 +5,12 @@ Aplikasi web shuttle antar-kota menggunakan Next.js App Router, TypeScript, Pris
 ## Menjalankan lokal
 
 1. Gunakan Node.js 20 atau lebih baru.
-2. Salin `.env.example` menjadi `.env` dan isi `DATABASE_URL` dari database PostgreSQL milik Anda.
-3. Jalankan:
+2. Buat proyek PostgreSQL baru di Supabase, lalu salin `.env.example` menjadi `.env`.
+3. Isi `DATABASE_URL` dengan connection string Supavisor Transaction Pooler (port 6543, tambahkan `pgbouncer=true`) dan `DIRECT_URL` dengan koneksi Direct (port 5432). Jika jaringan Anda tidak mendukung IPv6 Direct, gunakan Session Pooler untuk `DIRECT_URL`.
+4. Jangan commit file `.env` atau memasukkan password database ke source code. Simpan variabel yang sama sebagai Environment Variables di Vercel.
+
+
+5. Jalankan:
 
 ```bash
 npm install
