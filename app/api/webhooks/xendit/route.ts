@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       // it must never silently turn an expired seat reservation into a confirmed ticket.
       await tx.payment.update({
         where: { id: payment.id },
-        data: { status: PaymentStatus.PAID, paidAt: payload.paid_at ? new Date(payload.paid_at) : new Date() }
+        data: { status: PaymentStatus.PAID, paidAt: payload.paid_at && !Number.isNaN(Date.parse(payload.paid_at)) ? new Date(payload.paid_at) : new Date() }
       });
 
       if (current.status === BookingStatus.PENDING_PAYMENT && current.expiresAt > new Date()) {
@@ -66,6 +66,12 @@ export async function POST(request: Request) {
         await tx.tripSeat.updateMany({
           where: { id: { in: payment.booking.passengers.map((p) => p.tripSeatId) }, status: SeatStatus.LOCKED },
           data: { status: SeatStatus.BOOKED, lockToken: null, lockedUntil: null }
+        });
+      } else if (current.status === BookingStatus.PENDING_PAYMENT) {
+        await tx.booking.update({ where: { id: payment.bookingId }, data: { status: BookingStatus.EXPIRED } });
+        await tx.tripSeat.updateMany({
+          where: { id: { in: payment.booking.passengers.map((p) => p.tripSeatId) }, status: SeatStatus.LOCKED },
+          data: { status: SeatStatus.AVAILABLE, lockToken: null, lockedUntil: null }
         });
       }
     });
