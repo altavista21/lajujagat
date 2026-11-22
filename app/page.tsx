@@ -21,7 +21,7 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const results = useMemo(() => trips.filter(t => t.from === origin && t.to === destination), [origin, destination]);
   const activeTrip = results.find(t => t.id === active);
-  const seats = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+  const seats = Array.from({ length: activeTrip?.vehicle.includes("16") ? 16 : 10 }, (_, i) => String(i + 1));
   const unavailable = active === "lj-0715" ? ["2", "5", "8", "10"] : active === "lj-1030" ? ["1", "3", "4"] : ["2"];
   function search() { setSearched(true); setActive(null); setSelected([]); setNotice(""); }
   function toggleSeat(no: string) { if (unavailable.includes(no)) return; setSelected(s => s.includes(no) ? s.filter(x => x !== no) : s.length < Number(count) ? [...s, no] : s); }
