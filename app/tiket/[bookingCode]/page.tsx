@@ -48,7 +48,7 @@ export default async function TicketPage({
       {confirmed
         ? <p style={{ color: "#176b4a" }}>Simpan halaman ini sebagai bukti perjalanan. Tunjukkan kode booking kepada petugas.</p>
         : <p>Pemesanan belum menjadi tiket. Tiket diterbitkan setelah Xendit mengonfirmasi pembayaran melalui webhook.</p>}
-      <button onClick={() => window.print()} style={{ marginTop: 12, padding: "12px 18px", border: 0, borderRadius: 10, background: "#176b4a", color: "white", fontWeight: 700 }}>Cetak / Simpan PDF</button>
+      <p>Untuk menyimpan tiket, gunakan menu Cetak pada browser dan pilih Simpan sebagai PDF.</p>
     </section>
   </main>;
 }
