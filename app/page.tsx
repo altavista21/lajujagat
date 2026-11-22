@@ -133,6 +133,23 @@ export default function Home() {
     <section className="hero"><div className="hero-inner">
       <p className="eyebrow">PERJALANAN ANTAR KOTA</p>
       <h1>Berangkat nyaman.<br/><span>Sampai tujuan.</span></h1>
+      <div className="hero-art" aria-hidden="true">
+        <div className="hero-art-glow"></div>
+        <svg viewBox="0 0 560 260" role="img">
+          <path d="M18 215 C120 190 190 225 285 205 S440 178 545 202" fill="none" stroke="#b9d5e9" strokeWidth="3" strokeDasharray="10 12"/>
+          <path d="M80 182 L105 113 Q112 94 139 89 L397 89 Q421 91 437 113 L477 171 L493 185 L493 211 L70 211 L70 193Z" fill="#fff" stroke="#8aaec7" strokeWidth="4"/>
+          <path d="M128 111 Q134 101 151 101 L226 101 L226 157 L111 157Z" fill="#cfe7f7" stroke="#8aaec7" strokeWidth="3"/>
+          <path d="M239 101 L389 101 Q405 102 416 118 L444 157 L239 157Z" fill="#cfe7f7" stroke="#8aaec7" strokeWidth="3"/>
+          <path d="M82 172 L477 172 L477 195 L82 195Z" fill="#15548b"/>
+          <path d="M82 181 L477 181" stroke="#4da1df" strokeWidth="5"/>
+          <path d="M93 163 L110 163 M455 163 L475 163" stroke="#f6c66b" strokeWidth="7" strokeLinecap="round"/>
+          <circle cx="151" cy="207" r="25" fill="#203c50"/><circle cx="151" cy="207" r="11" fill="#dce8ef"/>
+          <circle cx="415" cy="207" r="25" fill="#203c50"/><circle cx="415" cy="207" r="11" fill="#dce8ef"/>
+          <text x="286" y="146" textAnchor="middle" fontSize="19" fontWeight="800" fill="#164d7c">LAJU JAGAT</text>
+          <path d="M70 191 L52 191 L52 178 L73 178 M493 190 L510 190 L510 176 L491 176" fill="none" stroke="#8aaec7" strokeWidth="4"/>
+        </svg>
+        <span className="art-caption">Nyaman di setiap perjalanan</span>
+      </div>
       <p className="hero-copy">Cari jadwal, pilih kursi, dan rencanakan perjalanan Anda dalam beberapa langkah.</p>
       <form className="search-panel" onSubmit={search}>
         <div className="field"><label htmlFor="origin">Kota asal</label><select id="origin" value={origin} onChange={e => { setOrigin(e.target.value); if (e.target.value === destination) setDestination(locations.destinations.find(value => value !== e.target.value) ?? ""); }} required><option value="">Pilih kota asal</option>{locations.origins.map(value => <option key={value}>{value}</option>)}</select></div>
