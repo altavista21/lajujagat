@@ -61,7 +61,7 @@ export default function Home() {
   }
 
   function toggleSeat(seat: { seatNo: string; status: SeatStatus }) {
-    if (seat.status !== "AVAILABLE") return;
+    if (booking || seat.status !== "AVAILABLE") return;
     setSelected((current) => current.includes(seat.seatNo)
       ? current.filter((item) => item !== seat.seatNo)
       : current.length < Number(count) ? [...current, seat.seatNo] : current);
@@ -83,6 +83,11 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Kursi gagal dikunci.");
       setBooking(data.booking);
+      setTrips((current) => current.map((trip) => trip.id === activeTrip.id ? {
+        ...trip,
+        availableSeats: Math.max(0, trip.availableSeats - selected.length),
+        seats: trip.seats.map((seat) => selected.includes(seat.seatNo) ? { ...seat, status: "LOCKED" as SeatStatus } : seat)
+      } : trip));
       setNotice(data.message || "Kursi berhasil dikunci.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Pemesanan gagal diproses.");
@@ -125,7 +130,7 @@ export default function Home() {
 
       {activeTrip && <section className="seat-section">
         <div className="seat-heading"><div><p className="eyebrow">DENAH KURSI</p><h3>{activeTrip.vehicle}</h3><p className="muted">Pilih {count} kursi. Harga {money(activeTrip.price)} per kursi.</p></div><button className="text-btn" onClick={() => { setActive(null); setSelected([]); }}>Tutup</button></div>
-        <div className="seat-layout"><div className="driver">Sopir <span>Depan</span></div><div className="seat-grid">{orderedSeats.map(seat => <button key={seat.seatNo} disabled={seat.status !== "AVAILABLE"} aria-pressed={selected.includes(seat.seatNo)} className={`seat ${seat.status !== "AVAILABLE" ? "booked" : selected.includes(seat.seatNo) ? "chosen" : ""}`} onClick={() => toggleSeat(seat)}>{seat.seatNo}</button>)}</div>
+        <div className="seat-layout"><div className="driver">Sopir <span>Depan</span></div><div className="seat-grid">{orderedSeats.map(seat => <button key={seat.seatNo} disabled={booking !== null || seat.status !== "AVAILABLE"} aria-pressed={selected.includes(seat.seatNo)} className={`seat ${seat.status !== "AVAILABLE" ? "booked" : selected.includes(seat.seatNo) ? "chosen" : ""}`} onClick={() => toggleSeat(seat)}>{seat.seatNo}</button>)}</div>
           <div className="seat-legend"><span><i/> Tersedia</span><span><i className="legend-chosen"/> Dipilih</span><span><i className="legend-booked"/> Terkunci / Terisi</span></div>
         </div>
         <div className="seat-summary"><div><span className="muted">{selected.length} dari {count} kursi dipilih</span><strong>{money(selected.length * activeTrip.price)}</strong></div></div>
