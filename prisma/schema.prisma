@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TripStatus { SCHEDULED BOARDING DEPARTED ARRIVED CANCELLED }
+enum SeatStatus { AVAILABLE LOCKED BOOKED }
+enum BookingStatus { PENDING_PAYMENT CONFIRMED EXPIRED CANCELLED }
+enum PaymentStatus { PENDING PAID FAILED EXPIRED REFUNDED }
+enum PickupMode { POOL DOOR_TO_DOOR }
+
+model Route {
+  id          String @id @default(cuid())
+  origin      String
+  destination String
+  active      Boolean @default(true)
+  templates   ScheduleTemplate[]
+  trips       Trip[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([origin, destination, active])
+}
+
+model VehicleTemplate {
+  id        String @id @default(cuid())
+  name      String
+  capacity  Int
+  layout    Json
+  templates ScheduleTemplate[]
+  vehicles  Vehicle[]
+  createdAt DateTime @default(now())
+}
+
+model Vehicle {
+  id         String @id @default(cuid())
+  plate      String @unique
+  name       String
+  active     Boolean @default(true)
+  templateId String
+  template   VehicleTemplate @relation(fields: [templateId], references: [id])
+  trips      Trip[]
+}
+
+model Driver {
+  id     String @id @default(cuid())
+  name   String
+  phone  String
+  active Boolean @default(true)
+  trips  Trip[]
+}
+
+model ScheduleTemplate {
+  id                String @id @default(cuid())
+  routeId           String
+  vehicleTemplateId String
+  departureTime     String
+  durationMinutes   Int
+  basePrice         Int
+  weekendPrice      Int?
+  active             Boolean @default(true)
+  route              Route @relation(fields: [routeId], references: [id])
+  vehicleTemplate    VehicleTemplate @relation(fields: [vehicleTemplateId], references: [id])
+  trips              Trip[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  @@index([routeId, active])
+}
+
+model Trip {
+  id          String @id @default(cuid())
+  templateId  String
+  routeId     String
+  vehicleId   String
+  driverId    String?
+  departureAt DateTime
+  arrivalAt   DateTime
+  price       Int
+  status      TripStatus @default(SCHEDULED)
+  template    ScheduleTemplate @relation(fields: [templateId], references: [id])
+  route       Route @relation(fields: [routeId], references: [id])
+  vehicle     Vehicle @relation(fields: [vehicleId], references: [id])
+  driver      Driver? @relation(fields: [driverId], references: [id])
+  seats       TripSeat[]
+  bookings    Booking[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([routeId, departureAt, status])
+}
+
+model TripSeat {
+  id          String @id @default(cuid())
+  tripId      String
+  seatNo      String
+  status      SeatStatus @default(AVAILABLE)
+  lockToken   String?
+  lockedUntil DateTime?
+  trip        Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  passengers  BookingPassenger[]
+  @@unique([tripId, seatNo])
+  @@index([tripId, status])
+  @@index([status, lockedUntil])
+}
+
+model Booking {
+  id             String @id @default(cuid())
+  bookingCode    String @unique
+  tripId         String
+  customerName   String
+  customerPhone  String
+  customerEmail  String?
+  status         BookingStatus @default(PENDING_PAYMENT)
+  expiresAt      DateTime
+  trip           Trip @relation(fields: [tripId], references: [id])
+  passengers     BookingPassenger[]
+  payments       Payment[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  @@index([tripId, status])
+  @@index([customerPhone, bookingCode])
+  @@index([expiresAt, status])
+}
+
+model BookingPassenger {
+  id             String @id @default(cuid())
+  bookingId      String
+  tripSeatId     String
+  name           String
+  pickupMode     PickupMode @default(POOL)
+  pickupAddress String?
+  pickupNote     String?
+  pickupMapsUrl  String?
+  dropoffMode    PickupMode @default(POOL)
+  dropoffAddress String?
+  dropoffNote    String?
+  dropoffMapsUrl String?
+  checkedInAt    DateTime?
+  booking        Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  tripSeat       TripSeat @relation(fields: [tripSeatId], references: [id])
+  @@unique([bookingId, tripSeatId])
+  @@index([tripSeatId])
+}
+
+model Payment {
+  id          String @id @default(cuid())
+  bookingId   String
+  provider    String
+  providerRef String? @unique
+  amount      Int
+  status      PaymentStatus @default(PENDING)
+  paidAt      DateTime?
+  booking     Booking @relation(fields: [bookingId], references: [id])
+  createdAt   DateTime @default(now())
+  @@index([bookingId, status])
+}
