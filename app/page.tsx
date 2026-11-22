@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 
 type SeatStatus = "AVAILABLE" | "LOCKED" | "BOOKED";
 type Trip = {
@@ -41,7 +41,7 @@ export default function Home() {
   const activeTrip = trips.find((trip) => trip.id === active) ?? null;
   const orderedSeats = useMemo(() => activeTrip?.seats ?? [], [activeTrip]);
 
-  async function search(event?: React.FormEvent) {
+  async function search(event?: FormEvent) {
     event?.preventDefault();
     setLoading(true); setError(""); setNotice(""); setBooking(null);
     setActive(null); setSelected([]);
@@ -83,7 +83,6 @@ export default function Home() {
       if (!response.ok) throw new Error(data.message || "Kursi gagal dikunci.");
       setBooking(data.booking);
       setNotice(data.message || "Kursi berhasil dikunci.");
-      await search();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Pemesanan gagal diproses.");
     } finally { setLoading(false); }
