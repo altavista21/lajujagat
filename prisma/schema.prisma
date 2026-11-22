@@ -150,6 +150,7 @@ model Payment {
   bookingId   String
   provider    String
   providerRef String? @unique
+  checkoutUrl String?
   amount      Int
   status      PaymentStatus @default(PENDING)
   paidAt      DateTime?
