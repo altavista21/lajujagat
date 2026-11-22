@@ -47,10 +47,10 @@ export default function Home() {
         if (!response.ok) throw new Error("Rute belum dapat dimuat.");
         return response.json();
       })
-      .then((result: { origins: string[]; destinations: string[] }) => {
+      .then((result: { routes: { origin: string; destination: string }[]; origins: string[]; destinations: string[] }) => {
         setLocations({ origins: result.origins ?? [], destinations: result.destinations ?? [] });
-        setOrigin((current) => current || result.origins?.[0] || "");
-        setDestination((current) => current || result.destinations?.find((value) => value !== (result.origins?.[0] ?? "")) || "");
+        setOrigin((current) => current || result.routes?.[0]?.origin || "");
+        setDestination((current) => current || result.routes?.[0]?.destination || "");
       })
       .catch(() => setLocations({ origins: [], destinations: [] }));
   }, []);
