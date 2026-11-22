@@ -70,6 +70,7 @@ export default function Home() {
 
   async function lockSeats() {
     if (!activeTrip || selected.length !== Number(count)) return;
+    const activeTripId = activeTrip.id;
     setLoading(true); setError(""); setNotice("");
     try {
       const response = await fetch("/api/bookings/lock", {
@@ -83,7 +84,7 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Kursi gagal dikunci.");
       setBooking(data.booking);
-      setTrips((current) => current.map((trip) => trip.id === activeTrip.id ? {
+      setTrips((current) => current.map((trip) => trip.id === activeTripId ? {
         ...trip,
         availableSeats: Math.max(0, trip.availableSeats - selected.length),
         seats: trip.seats.map((seat) => selected.includes(seat.seatNo) ? { ...seat, status: "LOCKED" as SeatStatus } : seat)
