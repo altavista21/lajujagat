@@ -37,7 +37,8 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [booking, setBooking] = useState<BookingResult | null>(null);\n  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [booking, setBooking] = useState<BookingResult | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   const activeTrip = trips.find((trip) => trip.id === active) ?? null;
   const orderedSeats = useMemo(() => activeTrip?.seats ?? [], [activeTrip]);
