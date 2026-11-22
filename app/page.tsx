@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 type SeatStatus = "AVAILABLE" | "LOCKED" | "BOOKED";
 type Trip = {
@@ -22,8 +22,9 @@ const time = (value: string) => new Date(value).toLocaleTimeString("id-ID", {
 });
 
 export default function Home() {
-  const [origin, setOrigin] = useState("Yogyakarta");
-  const [destination, setDestination] = useState("Semarang");
+  const [locations, setLocations] = useState<{ origins: string[]; destinations: string[] }>({ origins: [], destinations: [] });
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
   const [date, setDate] = useState(localDate());
   const [count, setCount] = useState("1");
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -39,6 +40,20 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [booking, setBooking] = useState<BookingResult | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/routes", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Rute belum dapat dimuat.");
+        return response.json();
+      })
+      .then((result: { origins: string[]; destinations: string[] }) => {
+        setLocations({ origins: result.origins ?? [], destinations: result.destinations ?? [] });
+        setOrigin((current) => current || result.origins?.[0] || "");
+        setDestination((current) => current || result.destinations?.find((value) => value !== (result.origins?.[0] ?? "")) || "");
+      })
+      .catch(() => setLocations({ origins: [], destinations: [] }));
+  }, []);
 
   const activeTrip = trips.find((trip) => trip.id === active) ?? null;
   const orderedSeats = useMemo(() => activeTrip?.seats ?? [], [activeTrip]);
@@ -120,9 +135,9 @@ export default function Home() {
       <h1>Berangkat nyaman.<br/><span>Sampai tujuan.</span></h1>
       <p className="hero-copy">Cari jadwal, pilih kursi, dan rencanakan perjalanan Anda dalam beberapa langkah.</p>
       <form className="search-panel" onSubmit={search}>
-        <div className="field"><label htmlFor="origin">Kota asal</label><select id="origin" value={origin} onChange={e => setOrigin(e.target.value)}><option>Yogyakarta</option><option>Semarang</option><option>Temanggung</option><option>Magelang</option></select></div>
+        <div className="field"><label htmlFor="origin">Kota asal</label><select id="origin" value={origin} onChange={e => { setOrigin(e.target.value); if (e.target.value === destination) setDestination(locations.destinations.find(value => value !== e.target.value) ?? ""); }} required><option value="">Pilih kota asal</option>{locations.origins.map(value => <option key={value}>{value}</option>)}</select></div>
         <button className="swap" type="button" aria-label="Tukar kota" onClick={() => { setOrigin(destination); setDestination(origin); }}>↔</button>
-        <div className="field"><label htmlFor="destination">Kota tujuan</label><select id="destination" value={destination} onChange={e => setDestination(e.target.value)}><option>Semarang</option><option>Yogyakarta</option><option>Temanggung</option><option>Magelang</option></select></div>
+        <div className="field"><label htmlFor="destination">Kota tujuan</label><select id="destination" value={destination} onChange={e => setDestination(e.target.value)} required><option value="">Pilih kota tujuan</option>{locations.destinations.filter(value => value !== origin).map(value => <option key={value}>{value}</option>)}</select></div>
         <div className="field"><label htmlFor="date">Tanggal berangkat</label><input id="date" type="date" value={date} min={localDate()} onChange={e => setDate(e.target.value)} required /></div>
         <div className="field"><label htmlFor="count">Penumpang</label><select id="count" value={count} onChange={e => setCount(e.target.value)}>{[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} orang</option>)}</select></div>
         <button className="primary search-btn" type="submit" disabled={loading}>Cari jadwal <span aria-hidden>→</span></button>
