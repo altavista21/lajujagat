@@ -48,14 +48,20 @@ export async function POST(request: Request) {
     }
 
     await prisma.$transaction(async (tx) => {
-      const current = await tx.booking.findUnique({ where: { id: payment.bookingId }, select: { status: true } });
-      if (!current || current.status === BookingStatus.CANCELLED || current.status === BookingStatus.EXPIRED) return;
+      const current = await tx.booking.findUnique({
+        where: { id: payment.bookingId },
+        select: { status: true, expiresAt: true }
+      });
+      if (!current) return;
 
+      // Record the money movement even if the booking expired. Late payment must be reconciled/refunded manually;
+      // it must never silently turn an expired seat reservation into a confirmed ticket.
       await tx.payment.update({
         where: { id: payment.id },
         data: { status: PaymentStatus.PAID, paidAt: payload.paid_at ? new Date(payload.paid_at) : new Date() }
       });
-      if (current.status !== BookingStatus.CONFIRMED) {
+
+      if (current.status === BookingStatus.PENDING_PAYMENT && current.expiresAt > new Date()) {
         await tx.booking.update({ where: { id: payment.bookingId }, data: { status: BookingStatus.CONFIRMED } });
         await tx.tripSeat.updateMany({
           where: { id: { in: payment.booking.passengers.map((p) => p.tripSeatId) }, status: SeatStatus.LOCKED },
